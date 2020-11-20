@@ -54,7 +54,7 @@ public class SettingsResty extends SpaceResty {
 	@Put("/:id/")
 	public Payload put(String id, ObjectNode settings) {
 		checkAuthorized(id, Permission.update);
-		long version = Services.settings().save(id, settings);
+		String version = Services.settings().save(id, settings);
 		return JsonPayload.ok().withFields("id", id, //
 				"type", "settings", "version", version)//
 				.build();
@@ -79,7 +79,7 @@ public class SettingsResty extends SpaceResty {
 	@Put("/:id/:field/")
 	public Payload put(String id, String field, JsonNode value) {
 		checkAuthorized(id, Permission.update);
-		long version = Services.settings().save(id, field, value);
+		String version = Services.settings().save(id, field, value);
 		return JsonPayload.ok().withFields("id", id, //
 				"type", "settings", "version", version)//
 				.build();
@@ -89,7 +89,7 @@ public class SettingsResty extends SpaceResty {
 	@Delete("/:id/:field/")
 	public Payload delete(String id, String field) {
 		checkAuthorized(id, Permission.update);
-		long version = Services.settings().delete(id, field);
+		String version = Services.settings().delete(id, field);
 		return JsonPayload.ok().withFields("id", id, //
 				"type", "settings", "version", version)//
 				.build();

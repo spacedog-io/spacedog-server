@@ -128,7 +128,7 @@ public class DataRestyTest2 extends SpaceTest {
 		DataWrap<Sale> wrap1 = fred.data().save(DataWrap.wrap(sale));
 
 		assertEquals("sale", wrap1.type());
-		assertEquals(1, wrap1.version());
+		assertNotNull(wrap1.version());
 		assertNotNull(wrap1.id());
 		assertEquals(fred.id(), wrap1.owner());
 		assertNotNull(wrap1.group());
@@ -143,7 +143,7 @@ public class DataRestyTest2 extends SpaceTest {
 
 		assertEquals(fred.id(), wrap2.owner());
 		assertNotNull(wrap2.group());
-		assertEquals(1, wrap2.version());
+		assertEquals(wrap1.version(), wrap2.version());
 		assertEquals("sale", wrap2.type());
 		assertEquals(wrap1.id(), wrap2.id());
 		assertEquals("1234567890", wrap2.source().number);
@@ -184,8 +184,10 @@ public class DataRestyTest2 extends SpaceTest {
 		assertAlmostEquals(sale, results.objects.get(0).source());
 
 		// small update no version should succeed
-		fred.data().patch("sale", wrap1.id(), //
+		String version3 = fred.data().patch("sale", wrap1.id(), //
 				Json.object("items", Json.array(Json.object("quantity", 7))));
+
+		assertNotEquals(wrap2.version(), version3);
 
 		// check update is correct
 		DataWrap<Sale> wrap3 = fred.data().getWrapped("sale", wrap1.id(), Sale.class);
@@ -194,7 +196,7 @@ public class DataRestyTest2 extends SpaceTest {
 		assertEquals(wrap1.createdAt(), wrap3.createdAt());
 		assertDateIsRecent(wrap3.updatedAt());
 		assertTrue(wrap1.updatedAt().isBefore(wrap3.updatedAt()));
-		assertEquals(2, wrap3.version());
+		assertEquals(version3, wrap3.version());
 		assertEquals("sale", wrap3.type());
 		assertEquals(wrap1.id(), wrap3.id());
 		assertEquals(7, wrap3.source().items.get(0).quantity);
@@ -204,7 +206,7 @@ public class DataRestyTest2 extends SpaceTest {
 
 		// update with invalid version should fail
 		assertHttpError(409, () -> fred.data().patch("sale", //
-				wrap1.id(), Json.object("number", "0987654321"), 1));
+				wrap1.id(), Json.object("number", "0987654321"), "127:234"));
 
 		// update with invalid version should fail
 		fred.put("/2/data/sale/" + wrap1.id())//
@@ -213,12 +215,12 @@ public class DataRestyTest2 extends SpaceTest {
 		// update with correct version should succeed
 		wrap3.source().number = "0987654321";
 		fred.data().save(wrap3);
-		assertEquals(3, wrap3.version());
+		assertNotEquals(version3, wrap3.version());
 
 		// get sale to check update did fine
 		DataWrap<Sale> wrap4 = fred.data().getWrapped("sale", wrap1.id(), Sale.class);
 		assertEquals("0987654321", wrap4.source().number);
-		assertEquals(3, wrap4.version());
+		assertEquals(wrap3.version(), wrap4.version());
 
 		assertAlmostEquals(wrap3.source(), wrap4.source(), "items");
 

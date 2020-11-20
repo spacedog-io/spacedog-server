@@ -16,16 +16,16 @@ import io.spacedog.client.credentials.ObjectRolePermissions;
 public class SettingsAclSettings extends ObjectRolePermissions implements Settings {
 
 	@JsonIgnore
-	private long version = MATCH_ANY_VERSIONS;
+	private String version;
 
 	@Override
 	@JsonIgnore
-	public long version() {
+	public String version() {
 		return version;
 	}
 
 	@Override
-	public void version(long version) {
+	public void version(String version) {
 		this.version = version;
 	}
 

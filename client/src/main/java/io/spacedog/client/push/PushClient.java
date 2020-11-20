@@ -92,11 +92,11 @@ public class PushClient {
 		return dog.data().save(object);
 	}
 
-	public long patchInstallation(String id, Object source) {
+	public String patchInstallation(String id, Object source) {
 		return dog.data().patch(Installation.TYPE, id, source);
 	}
 
-	public long saveInstallationField(String id, String field, Object object) {
+	public String saveInstallationField(String id, String field, Object object) {
 		return dog.data().saveField(Installation.TYPE, id, field, object);
 	}
 
@@ -120,11 +120,11 @@ public class PushClient {
 		return dog.data().getField(Installation.TYPE, installationId, "tags", String[].class);
 	}
 
-	public long setTags(String installationId, String... tags) {
+	public String setTags(String installationId, String... tags) {
 		return dog.data().saveField(Installation.TYPE, installationId, "tags", tags);
 	}
 
-	public long deleteTags(String installationId) {
+	public String deleteTags(String installationId) {
 		return dog.data().deleteField(Installation.TYPE, installationId, "tags");
 	}
 

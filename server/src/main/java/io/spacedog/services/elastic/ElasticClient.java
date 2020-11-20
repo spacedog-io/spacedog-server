@@ -43,7 +43,6 @@ import org.elasticsearch.client.indices.GetMappingsResponse;
 import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.common.Priority;
-import org.elasticsearch.common.lucene.uid.Versions;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.IndexNotFoundException;
@@ -121,6 +120,12 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	public SearchResponse search(SearchRequest request) {
+
+		// Force search request to get version data
+		// i.e. seqNo and primaryTerm from elasticsearch
+		if (request.source() != null)
+			request.source().seqNoAndPrimaryTerm(true);
+
 		try {
 			return internalClient.search(request, RequestOptions.DEFAULT);
 		} catch (IOException e) {
@@ -169,7 +174,7 @@ public class ElasticClient implements SpaceParams {
 		return index(prepareIndex(index, id, null, source, refresh));
 	}
 
-	public IndexResponse index(ElasticIndex index, String id, long version, Object source, boolean refresh) {
+	public IndexResponse index(ElasticIndex index, String id, String version, Object source, boolean refresh) {
 		return index(prepareIndex(index, id, version, source, refresh));
 	}
 
@@ -185,24 +190,23 @@ public class ElasticClient implements SpaceParams {
 		return index(request);
 	}
 
-	private IndexRequest prepareIndex(ElasticIndex index, String id, Long version, Object source, Boolean refresh) {
+	private IndexRequest prepareIndex(ElasticIndex index, String id, String version, Object source, Boolean refresh) {
 		String sourceString = source instanceof String //
 				? source.toString()
 				: Json.toString(source);
 
-		if (refresh == null) {
-			refresh = Boolean.FALSE;
-		}
-
-		if (version == null) {
-			version = Versions.MATCH_ANY;
-		}
-
-		return prepareIndex(index)//
+		IndexRequest request = prepareIndex(index)//
 				.id(id)//
-				.version(version)//
 				.source(sourceString, XContentType.JSON)//
 				.setRefreshPolicy(ElasticUtils.toPolicy(refresh));
+
+		if (version != null) {
+			ElasticVersion v = ElasticVersion.valueOf(version);
+			request.setIfSeqNo(v.seqNo);
+			request.setIfPrimaryTerm(v.primaryTerm);
+		}
+
+		return request;
 	}
 
 	//

@@ -47,7 +47,7 @@ public class Credentials implements SpaceFields {
 	@JsonProperty
 	private String id;
 	@JsonProperty
-	private long version;
+	private String version;
 	@JsonProperty
 	private String username;
 	@JsonProperty
@@ -102,11 +102,11 @@ public class Credentials implements SpaceFields {
 		return this;
 	}
 
-	public long version() {
+	public String version() {
 		return version;
 	}
 
-	public Credentials version(long version) {
+	public Credentials version(String version) {
 		this.version = version;
 		return this;
 	}

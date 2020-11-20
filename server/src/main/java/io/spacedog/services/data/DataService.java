@@ -18,7 +18,6 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
-import org.elasticsearch.common.lucene.uid.Versions;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -47,12 +46,12 @@ import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
-import io.spacedog.server.J8;
 import io.spacedog.server.Server;
 import io.spacedog.services.Services;
 import io.spacedog.services.SpaceService;
 import io.spacedog.services.elastic.ElasticExportStreamingOutput;
 import io.spacedog.services.elastic.ElasticIndex;
+import io.spacedog.services.elastic.ElasticVersion;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -72,7 +71,8 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 				? Json.toPojo(response.getSourceAsBytes(), wrap.sourceClass())//
 				: Json.updatePojo(response.getSourceAsBytes(), wrap.source());
 
-		return wrap.source(source).version(response.getVersion());
+		return wrap.source(source)//
+				.version(ElasticVersion.toString(response.getSeqNo(), response.getPrimaryTerm()));
 	}
 
 	public <K> K fetch(String type, String id, K object) {
@@ -136,7 +136,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 				Json.toPojo(response.getSourceAsBytes(), sourceClass))//
 				.id(response.getId())//
 				.type(ElasticIndex.valueOf(response.getIndex()).type())//
-				.version(response.getVersion());
+				.version(ElasticVersion.toString(response.getSeqNo(), response.getPrimaryTerm()));
 	}
 
 	//
@@ -156,8 +156,8 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 
 		if (response.isExists()) {
 			DataObjectBase base = Json.toPojo(response.getSourceAsBytes(), DataObjectBase.class);
-			wrap = DataWrap.wrap(base).type(type)//
-					.id(id).version(response.getVersion());
+			wrap = DataWrap.wrap(base).type(type).id(id)//
+					.version(ElasticVersion.toString(response.getSeqNo(), response.getPrimaryTerm()));
 		}
 		return Optional.ofNullable(wrap);
 	}
@@ -208,10 +208,10 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	}
 
 	public <K> DataWrap<K> save(String type, String id, K source) {
-		return save(type, id, 0, source);
+		return save(type, id, null, source);
 	}
 
-	public <K> DataWrap<K> save(String type, String id, long version, K source) {
+	public <K> DataWrap<K> save(String type, String id, String version, K source) {
 		return save(DataWrap.wrap(source).type(type).id(id).version(version));
 	}
 
@@ -225,23 +225,19 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 				index(wrap.type()), wrap.id(), wrap.version(), wrap.source(), false);
 
 		return wrap.id(response.getId())//
-				.version(response.getVersion());
+				.version(ElasticVersion.toString(response.getSeqNo(), response.getPrimaryTerm()));
 	}
 
 	//
 	// Patch
 	//
 
-	public long patch(String type, String id, Object source) {
-		return patch(type, id, Versions.MATCH_ANY, source);
+	public String patch(String type, String id, Object source) {
+		return patch(type, id, null, source);
 	}
 
-	public long patch(String type, String id, long version, Object patch) {
+	public String patch(String type, String id, String version, Object patch) {
 		return patch(DataWrap.wrap(patch).type(type).id(id).version(version)).version();
-	}
-
-	public static long elasticVersion(long version) {
-		return version < 0 ? Versions.MATCH_ANY : version;
 	}
 
 	public <K> DataWrap<K> patch(DataWrap<K> wrap) {
@@ -255,8 +251,13 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 		source.put(UPDATED_AT_FIELD, DateTime.now().toString());
 
 		UpdateRequest request = elastic().prepareUpdate(index(wrap.type()), wrap.id())//
-				.version(elasticVersion(wrap.version()))//
 				.doc(source.toString(), XContentType.JSON);
+
+		if (wrap.version() != null) {
+			ElasticVersion version = ElasticVersion.valueOf(wrap.version());
+			request.setIfSeqNo(version.seqNo);
+			request.setIfPrimaryTerm(version.primaryTerm);
+		}
 
 		elastic().update(request);
 
@@ -283,17 +284,17 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	// Field methods
 	//
 
-	public <K> K get(String type, String id, String field, Class<K> valueClass) {
+	public <K> K getField(String type, String id, String field, Class<K> valueClass) {
 		return Json.toPojo(Json.get(get(type, id), field), valueClass);
 	}
 
-	public long save(String type, String id, String field, Object value) {
+	public String saveField(String type, String id, String field, Object value) {
 		ObjectNode source = Json.object();
 		Json.with(source, field, value);
 		return patch(type, id, source);
 	}
 
-	public long delete(String type, String id, String field) {
+	public String deleteField(String type, String id, String field) {
 		ObjectNode source = get(type, id);
 		Json.remove(source, field);
 		return save(type, id, source).version();
@@ -363,7 +364,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 		return DataWrap.wrap(Json.toPojo(hit.getSourceAsString(), sourceClass))//
 				.id(hit.getId())//
 				.type(ElasticIndex.valueOf(hit.getIndex()).type())//
-				.version(hit.getVersion())//
+				.version(ElasticVersion.toString(hit.getSeqNo(), hit.getPrimaryTerm()))//
 				.score(extractScore(hit.getScore()))//
 				.sort(extractSortValues(hit.getSortValues()));
 	}
@@ -375,20 +376,6 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	private float extractScore(float score) {
 		return Float.isFinite(score) ? score : 0;
 	}
-
-	// if (response.getAggregations() != null) {
-	// try {
-	// InternalAggregations aggs = (InternalAggregations)
-	// response.getAggregations();
-	// XContentBuilder jsonXBuilder = JsonXContent.contentBuilder();
-	// jsonXBuilder.startObject();
-	// aggs.toXContentInternal(jsonXBuilder, ToXContent.EMPTY_PARAMS);
-	// jsonXBuilder.endObject();
-	// payload.putRawValue("aggregations", new RawValue(jsonXBuilder.string()));
-	// } catch (IOException e) {
-	// throw Exceptions.runtime("failed to convert aggregations into json", e);
-	// }
-	// }
 
 	//
 	// CSV

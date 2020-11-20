@@ -44,7 +44,7 @@ public class DataWrapDeserializer extends JsonDeserializer<DataWrap<Object>> {
 		else if (fieldName.equals("type"))
 			wrap.type(readString(p));
 		else if (fieldName.equals("version"))
-			wrap.version(p.getLongValue());
+			wrap.version(readString(p));
 		else if (fieldName.equals("score"))
 			wrap.score(p.getFloatValue());
 		else if (fieldName.equals("sort"))

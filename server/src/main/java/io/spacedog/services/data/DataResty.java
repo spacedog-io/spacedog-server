@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.Locale;
 
 import org.elasticsearch.common.Strings;
-import org.elasticsearch.common.lucene.uid.Versions;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -116,7 +115,7 @@ public class DataResty extends SpaceResty {
 	@Put("/:type/:id/")
 	public Payload put(String type, String id, String body, Context context) {
 		DataWrap<ObjectNode> object = DataWrap.wrap(Json.readObject(body))//
-				.version(context.query().getLong(VERSION_PARAM, Versions.MATCH_ANY))//
+				.version(context.query().get(VERSION_PARAM))//
 				.type(type).id(id);
 
 		boolean forceMeta = context.query().getBoolean(FORCE_META_PARAM, false);
@@ -152,7 +151,7 @@ public class DataResty extends SpaceResty {
 		ObjectNode source = Json.object();
 		Json.with(source, field, Json.readNode(body));
 		DataWrap<ObjectNode> object = DataWrap.wrap(source)//
-				.version(context.query().getLong(VERSION_PARAM, Versions.MATCH_ANY))//
+				.version(context.query().get(VERSION_PARAM))//
 				.type(type).id(id);
 		object = Services.data().patchIfAuthorized(object);
 		return JsonPayload.saved(object).build();

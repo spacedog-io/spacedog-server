@@ -17,7 +17,7 @@ import io.spacedog.client.settings.SettingsBase;
 public class InternalFileSettings extends HashMap<String, FileBucket> implements Settings {
 
 	@JsonIgnore
-	private long version = MATCH_ANY_VERSIONS;
+	private String version;
 
 	@JsonIgnore
 	@Override
@@ -27,12 +27,12 @@ public class InternalFileSettings extends HashMap<String, FileBucket> implements
 
 	@Override
 	@JsonIgnore
-	public long version() {
+	public String version() {
 		return version;
 	}
 
 	@Override
-	public void version(long version) {
+	public void version(String version) {
 		this.version = version;
 	}
 }

@@ -49,8 +49,8 @@ public class JsonPayload implements SpaceFields {
 		return this;
 	}
 
-	public JsonPayload withVersion(long version) {
-		if (version > 0)
+	public JsonPayload withVersion(String version) {
+		if (version != null)
 			object().put(VERSION_FIELD, version);
 		return this;
 	}

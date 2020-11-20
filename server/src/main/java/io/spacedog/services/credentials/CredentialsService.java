@@ -47,6 +47,7 @@ import io.spacedog.services.SpaceService;
 import io.spacedog.services.elastic.ElasticClient;
 import io.spacedog.services.elastic.ElasticExportStreamingOutput;
 import io.spacedog.services.elastic.ElasticIndex;
+import io.spacedog.services.elastic.ElasticVersion;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -236,9 +237,8 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 				? elastic().index(index, source, true) //
 				: elastic().index(index, credentials.id(), source, true);
 
-		credentials.id(response.getId());
-		credentials.version(response.getVersion());
-		return credentials;
+		String version = ElasticVersion.toString(response.getSeqNo(), response.getPrimaryTerm());
+		return credentials.id(response.getId()).version(version);
 	}
 
 	public Credentials create(String username, String password, String email, String... roles) {
@@ -325,8 +325,8 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 		IndexResponse response = elastic().index(index(), //
 				credentials.id(), toElasticSource(credentials), true);
 
-		credentials.version(response.getVersion());
-		return credentials;
+		String version = ElasticVersion.toString(response.getSeqNo(), response.getPrimaryTerm());
+		return credentials.version(version);
 	}
 
 	//
@@ -492,19 +492,20 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 
 	private Credentials toCredentials(SearchHit hit) {
 		return fromElasticSource(hit.getSourceAsString(), //
-				hit.getId(), hit.getVersion());
+				hit.getId(), hit.getSeqNo(), hit.getPrimaryTerm());
 	}
 
 	private Credentials toCredentials(GetResponse response) {
 		return fromElasticSource(response.getSourceAsString(), //
-				response.getId(), response.getVersion());
+				response.getId(), response.getSeqNo(), response.getPrimaryTerm());
 	}
 
-	private Credentials fromElasticSource(String sourceAsString, String id, long version) {
+	private Credentials fromElasticSource(String sourceAsString, String id, long seqNo, long primaryTerm) {
 		ObjectNode source = Json.readObject(sourceAsString);
 
 		Credentials credentials = Json.toPojo(source, Credentials.class)//
-				.version(version).id(id);
+				.version(ElasticVersion.toString(seqNo, primaryTerm))//
+				.id(id);
 
 		JsonNode hashed = source.get(HASHED_PASSWORD_FIELD);
 

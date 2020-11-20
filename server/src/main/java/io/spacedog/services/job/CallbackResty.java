@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.elasticsearch.common.lucene.uid.Versions;
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -122,7 +121,7 @@ public class CallbackResty extends SpaceResty {
 	@Put("/:id/")
 	public Payload putDemand(String id, String body, Context context) {
 		DataWrap<ObjectNode> object = DataWrap.wrap(Json.readObject(body))//
-				.version(context.query().getLong(VERSION_PARAM, Versions.MATCH_ANY))//
+				.version(context.query().get(VERSION_PARAM))//
 				.type(DATA_TYPE).id(id);
 
 		object = Services.data().saveIfAuthorized(object, false);

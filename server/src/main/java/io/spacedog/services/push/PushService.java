@@ -278,12 +278,12 @@ public class PushService extends SpaceService implements SpaceFields {
 		return Services.data().saveIfAuthorized(wrap, false);
 	}
 
-	public long patchInstallation(String id, Object source) {
+	public String patchInstallation(String id, Object source) {
 		return Services.data().patch(DATA_TYPE, id, source);
 	}
 
-	public long saveInstallationField(String id, String field, Object object) {
-		return Services.data().save(DATA_TYPE, id, field, object);
+	public String saveInstallationField(String id, String field, Object object) {
+		return Services.data().saveField(DATA_TYPE, id, field, object);
 	}
 
 	public DataResults<Installation> searchInstallations(SearchSourceBuilder source) {
@@ -303,15 +303,15 @@ public class PushService extends SpaceService implements SpaceFields {
 	//
 
 	public String[] getTags(String installationId) {
-		return Services.data().get(DATA_TYPE, installationId, "tags", String[].class);
+		return Services.data().getField(DATA_TYPE, installationId, "tags", String[].class);
 	}
 
-	public long setTags(String installationId, String... tags) {
-		return Services.data().save(DATA_TYPE, installationId, "tags", tags);
+	public String setTags(String installationId, String... tags) {
+		return Services.data().saveField(DATA_TYPE, installationId, "tags", tags);
 	}
 
-	public long deleteTags(String installationId) {
-		return Services.data().delete(DATA_TYPE, installationId, TAGS);
+	public String deleteTags(String installationId) {
+		return Services.data().deleteField(DATA_TYPE, installationId, TAGS);
 	}
 
 	//

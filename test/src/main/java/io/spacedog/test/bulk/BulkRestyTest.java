@@ -137,14 +137,29 @@ public class BulkRestyTest extends SpaceTest {
 
 		responses = vince.bulk().execute(bulk);
 		assertEquals("1", responses.get(0).content.get("id").asText());
-		assertEquals(1, responses.get(0).content.get("version").asLong());
+		String newVersion = responses.get(0).content.get("version").asText();
+		assertNotNull(newVersion);
+
 		assertEquals("2", responses.get(1).content.get("id").asText());
-		assertEquals(1, responses.get(1).content.get("version").asLong());
+		String oldVersion = newVersion;
+		newVersion = responses.get(1).content.get("version").asText();
+		assertNotNull(newVersion);
+		assertNotEquals(oldVersion, newVersion);
+
 		assertEquals(2, responses.get(2).content.get("total").asLong());
+
 		assertEquals("1", responses.get(3).content.get("id").asText());
-		assertEquals(2, responses.get(3).content.get("version").asLong());
+		oldVersion = newVersion;
+		newVersion = responses.get(3).content.get("version").asText();
+		assertNotNull(newVersion);
+		assertNotEquals(oldVersion, newVersion);
+
 		assertEquals("2", responses.get(4).content.get("id").asText());
-		assertEquals(2, responses.get(4).content.get("version").asLong());
+		oldVersion = newVersion;
+		newVersion = responses.get(4).content.get("version").asText();
+		assertNotNull(newVersion);
+		assertNotEquals(oldVersion, newVersion);
+
 		assertEquals(2, responses.get(5).content.get("total").asLong());
 
 		// assertEquals(Json.object("batchCredentialChecks", 1), response.debug());

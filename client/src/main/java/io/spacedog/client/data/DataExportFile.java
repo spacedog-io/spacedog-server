@@ -45,9 +45,8 @@ public class DataExportFile<K> implements Iterator<DataWrap<K>>, Iterable<DataWr
 		ObjectNode object = Json.readObject(json);
 		K source = Json.toPojo(object.get("source"), sourceClass);
 		return DataWrap.wrap(source)//
-				.id(object.get(SpaceFields.ID_FIELD).asText())//
-				.version(object.path(SpaceFields.VERSION_FIELD)//
-						.asLong(DataWrap.MATCH_ANY_VERSIONS));
+				.id(object.path(SpaceFields.ID_FIELD).asText(null))//
+				.version(object.path(SpaceFields.VERSION_FIELD).asText(null));
 	}
 
 	@Override

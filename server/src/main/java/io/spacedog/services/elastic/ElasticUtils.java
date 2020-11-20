@@ -41,8 +41,8 @@ public class ElasticUtils {
 		return response.getResult() == Result.NOT_FOUND;
 	}
 
-	public static RefreshPolicy toPolicy(boolean refresh) {
-		return refresh ? RefreshPolicy.IMMEDIATE : RefreshPolicy.NONE;
+	public static RefreshPolicy toPolicy(Boolean refresh) {
+		return refresh == null || !refresh ? RefreshPolicy.NONE : RefreshPolicy.IMMEDIATE;
 	}
 
 	private static NamedXContentRegistry contentRegistry = new NamedXContentRegistry(//

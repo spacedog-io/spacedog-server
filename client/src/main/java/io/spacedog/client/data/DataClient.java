@@ -116,10 +116,10 @@ public class DataClient implements SpaceFields, SpaceParams {
 	}
 
 	public <K> DataWrap<K> save(K source, String id) {
-		return save(source, id, -3);
+		return save(source, id, null);
 	}
 
-	public <K> DataWrap<K> save(K source, String id, long version) {
+	public <K> DataWrap<K> save(K source, String id, String version) {
 		return save(DataWrap.wrap(source).id(id).version(version));
 	}
 
@@ -128,10 +128,10 @@ public class DataClient implements SpaceFields, SpaceParams {
 	}
 
 	public <K> DataWrap<K> save(String type, K source, String id) {
-		return save(type, source, id, -3);
+		return save(type, source, id, null);
 	}
 
-	public <K> DataWrap<K> save(String type, K source, String id, long version) {
+	public <K> DataWrap<K> save(String type, K source, String id, String version) {
 		return save(DataWrap.wrap(source).type(type).id(id).version(version));
 	}
 
@@ -164,7 +164,7 @@ public class DataClient implements SpaceFields, SpaceParams {
 				.queryParam(FORCE_META_PARAM, forceMeta ? true : null)//
 				.bodyPojo(object.source());
 
-		if (object.version() > 0)
+		if (object.version() != null)
 			request.queryParam(VERSION_PARAM, object.version());
 
 		return request.go(200, 201).asPojo(object);
@@ -174,21 +174,19 @@ public class DataClient implements SpaceFields, SpaceParams {
 	// Patch
 	//
 
-	public long patch(String type, String id, Object source) {
-		return patch(type, id, source, DataWrap.MATCH_ANY_VERSIONS);
+	public String patch(String type, String id, Object source) {
+		return patch(type, id, source, null);
 	}
 
-	public long patch(String type, String id, Object source, long version) {
+	public String patch(String type, String id, Object source, String version) {
 		SpaceRequest request = dog.put("/2/data/{type}/{id}")//
 				.routeParam(ID_FIELD, id)//
 				.routeParam(TYPE_FIELD, type)//
-				.queryParam(PATCH_PARAM, true);
-
-		if (version >= 0)
-			request.queryParam(VERSION_PARAM, version);
+				.queryParam(PATCH_PARAM, true)//
+				.queryParam(VERSION_PARAM, version);
 
 		return request.bodyPojo(source).go(200)//
-				.get(VERSION_FIELD).asLong();
+				.get(VERSION_FIELD).asText(null);
 	}
 
 	//
@@ -232,16 +230,16 @@ public class DataClient implements SpaceFields, SpaceParams {
 				.go(200).asPojo(dataClass);
 	}
 
-	public long saveField(String type, String id, String field, Object object) {
+	public String saveField(String type, String id, String field, Object object) {
 		return dog.put("/2/data/{t}/{i}/{f}").routeParam("i", id)//
 				.routeParam("t", type).routeParam("f", field)//
-				.bodyPojo(object).go(200).get(VERSION_FIELD).asLong();
+				.bodyPojo(object).go(200).get(VERSION_FIELD).asText(null);
 	}
 
-	public Long deleteField(String type, String id, String field) {
+	public String deleteField(String type, String id, String field) {
 		return dog.delete("/2/data/{t}/{i}/{f}")//
 				.routeParam("i", id).routeParam("t", type)//
-				.routeParam("f", field).go(200).get(VERSION_FIELD).asLong();
+				.routeParam("f", field).go(200).get(VERSION_FIELD).asText(null);
 	}
 
 	//

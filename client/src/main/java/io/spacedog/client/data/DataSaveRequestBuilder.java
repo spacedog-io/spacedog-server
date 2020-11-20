@@ -18,7 +18,7 @@ public abstract class DataSaveRequestBuilder<K> {
 		return this;
 	}
 
-	public DataSaveRequestBuilder<K> version(long version) {
+	public DataSaveRequestBuilder<K> version(String version) {
 		wrap.version(version);
 		return this;
 	}

@@ -1,7 +1,5 @@
 package io.spacedog.services.push;
 
-import org.elasticsearch.common.lucene.uid.Versions;
-
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.push.Installation;
@@ -36,7 +34,7 @@ public class PushResty extends SpaceResty {
 	@Put("/data/installation/:id/")
 	public Payload put(String id, Installation installation, Context context) {
 		DataWrap<Installation> wrap = DataWrap.wrap(installation).id(id)//
-				.version(context.query().getLong(VERSION_PARAM, Versions.MATCH_ANY));
+				.version(context.query().get(VERSION_PARAM));
 		wrap = Services.push().saveInstallationIfAuthorized(wrap);
 		return JsonPayload.saved(wrap).build();
 	}

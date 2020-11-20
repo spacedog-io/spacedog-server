@@ -273,4 +273,35 @@ public class DataRestyTest extends SpaceTest {
 		assertHttpError(400, () -> superadmin.data().saveField(//
 				Message.TYPE, messageId, UPDATED_AT_FIELD, "XXX"));
 	}
+
+	@Test
+	public void testSearchReturnsObjectVersions() {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = clearServer();
+		superadmin.schemas().set(Message.schema());
+		superadmin.schemas().set(Message.schema());
+
+		DataWrap<Message> msg1 = superadmin.data().save(new Message("Hi guys!"), "1");
+		DataWrap<Message> msg2 = superadmin.data().save(new Message("Pretty cool, huu!"), "2");
+		DataResults<ObjectNode> results = superadmin.data().prepareGetAll().type(Message.TYPE).refresh(true).go();
+
+		assertEquals(2, results.total);
+
+		DataWrap<ObjectNode> msg11 = results.objects.stream().filter(wrap -> wrap.id().equals(msg1.id()))//
+				.findFirst().get();
+		assertEquals(msg1.version(), msg11.version());
+
+		DataWrap<ObjectNode> msg22 = results.objects.stream().filter(wrap -> wrap.id().equals(msg2.id()))//
+				.findFirst().get();
+		assertEquals(msg2.version(), msg22.version());
+
+		DataWrap<Message> msg111 = superadmin.data().getWrapped(msg1.id(), Message.class);
+		assertEquals(msg1.version(), msg111.version());
+
+		DataWrap<Message> msg222 = superadmin.data().getWrapped(msg2.id(), Message.class);
+		assertEquals(msg2.version(), msg222.version());
+	}
+
 }

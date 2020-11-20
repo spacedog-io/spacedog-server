@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -30,6 +31,7 @@ import io.spacedog.server.Server;
 import io.spacedog.services.SpaceService;
 import io.spacedog.services.elastic.ElasticClient;
 import io.spacedog.services.elastic.ElasticIndex;
+import io.spacedog.services.elastic.ElasticVersion;
 import io.spacedog.services.file.InternalFileSettings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -171,36 +173,36 @@ public class SettingsService extends SpaceService {
 
 	// save settings
 
-	public <K extends Settings> long save(K settings) {
+	public <K extends Settings> String save(K settings) {
 		return save(settings.id(), settings);
 	}
 
-	public <K> long save(String id, K settings) {
-		long version = doSave(id, Json.toString(settings));
+	public <K> String save(String id, K settings) {
+		String version = doSave(id, Json.toString(settings));
 		Server.context().setSettings(id, settings);
 		return version;
 	}
 
-	public long save(String id, ObjectNode settings) {
+	public String save(String id, ObjectNode settings) {
 		checkSettingsAreValid(id, settings);
-		long version = doSave(id, settings.toString());
+		String version = doSave(id, settings.toString());
 		Server.context().setSettings(id, settings);
 		return version;
 	}
 
-	private long doSave(String id, String settings) {
+	private String doSave(String id, String settings) {
 		makeSureIndexIsCreated();
-		return elastic().index(index(), id, settings)//
-				.getVersion();
+		IndexResponse response = elastic().index(index(), id, settings);
+		return ElasticVersion.toString(response.getSeqNo(), response.getPrimaryTerm());
 	}
 
 	// save field
 
-	public long save(Class<? extends Settings> settingsClass, String field, Object value) {
+	public String save(Class<? extends Settings> settingsClass, String field, Object value) {
 		return save(SettingsBase.id(settingsClass), field, value);
 	}
 
-	public long save(String id, String field, Object value) {
+	public String save(String id, String field, Object value) {
 		ObjectNode object = get(id).orElse(Json.object());
 		Json.set(object, field, value);
 		return save(id, object);
@@ -219,11 +221,11 @@ public class SettingsService extends SpaceService {
 
 	// delete field
 
-	public <K extends Settings> long delete(Class<K> settingsClass, String field) {
+	public <K extends Settings> String delete(Class<K> settingsClass, String field) {
 		return delete(SettingsBase.id(settingsClass), field);
 	}
 
-	public long delete(String id, String field) {
+	public String delete(String id, String field) {
 		ObjectNode object = getOrThrow(id);
 		Json.remove(object, field);
 		return save(id, object);
@@ -262,7 +264,7 @@ public class SettingsService extends SpaceService {
 
 	private static class SettingsSource {
 		private String string;
-		private long version;
+		private String version;
 	}
 
 	private Optional<SettingsSource> doGet(String id) {
@@ -272,7 +274,7 @@ public class SettingsService extends SpaceService {
 			if (response.isExists()) {
 				SettingsSource source = new SettingsSource();
 				source.string = response.getSourceAsString();
-				source.version = response.getVersion();
+				source.version = ElasticVersion.toString(response.getSeqNo(), response.getPrimaryTerm());
 				return Optional.of(source);
 			}
 

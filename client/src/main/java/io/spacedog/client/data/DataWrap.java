@@ -22,14 +22,12 @@ import io.spacedog.utils.Json;
 		setterVisibility = Visibility.NONE)
 public class DataWrap<K> implements DataObject, SpaceFields {
 
-	public static final long MATCH_ANY_VERSIONS = -3L;
-
 	private K source;
 	@JsonIgnore
 	private Class<K> sourceClass;
 	private String id;
 	private String type;
-	private long version = MATCH_ANY_VERSIONS;
+	private String version;
 	private Object[] sort;
 	private float score;
 
@@ -94,11 +92,11 @@ public class DataWrap<K> implements DataObject, SpaceFields {
 	}
 
 	@JsonProperty
-	public long version() {
+	public String version() {
 		return version;
 	}
 
-	public DataWrap<K> version(long version) {
+	public DataWrap<K> version(String version) {
 		this.version = version;
 		return this;
 	}

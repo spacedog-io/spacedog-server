@@ -29,7 +29,7 @@ public abstract class SpaceJob implements Settings {
 	public Object payload;
 
 	@JsonIgnore
-	public long version;
+	public String version;
 
 	@Override
 	public String id() {
@@ -37,12 +37,12 @@ public abstract class SpaceJob implements Settings {
 	}
 
 	@Override
-	public long version() {
+	public String version() {
 		return version;
 	}
 
 	@Override
-	public void version(long version) {
+	public void version(String version) {
 		this.version = version;
 	}
 

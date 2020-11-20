@@ -38,8 +38,8 @@ public class DataResultsDeserializerTest extends Assert {
 		original.total = 25;
 		original.next = "NEXT";
 		original.objects = Lists.newArrayList(//
-				DataWrap.wrap(new Message("hi")).id("1").type("message").version(2), //
-				DataWrap.wrap(new Message("hello")).id("2").type("message").version(3));
+				DataWrap.wrap(new Message("hi")).id("1").type("message").version("2:3"), //
+				DataWrap.wrap(new Message("hello")).id("2").type("message").version("3:4"));
 
 		DataResults<Message> copy = DataResults.of(Message.class);
 		copy = Json.updatePojo(Json.toString(original), copy);

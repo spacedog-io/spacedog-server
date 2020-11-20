@@ -24,7 +24,7 @@ public class DataWrapDeserializerTest extends Assert {
 		message.isPublic = true;
 
 		DataWrap<Message> original = DataWrap.wrap(message)//
-				.id("123").type("message").version(2).score(2.3f)//
+				.id("123").type("message").version("2:3").score(2.3f)//
 				.sort(new Object[] { 1.2d, "toto" });
 
 		DataWrap<Message> copy = DataWrap.wrap(new Message());
@@ -77,7 +77,7 @@ public class DataWrapDeserializerTest extends Assert {
 		message.isPublic = true;
 
 		DataWrap<Message> original = DataWrap.wrap(message)//
-				.id("123").type("message").version(2).score(2.3f)//
+				.id("123").type("message").version("2:3").score(2.3f)//
 				.sort(new Object[] { 1.2d, "toto" });
 
 		DataWrap<ObjectNode> copy = Json.updatePojo(Json.toString(original), DataWrap.wrap(ObjectNode.class));
