@@ -1,4 +1,4 @@
-package io.spacedog.services.elastic;
+package io.spacedog.database.elastic;
 
 import java.io.IOException;
 import java.io.OutputStream;

@@ -2,8 +2,8 @@ package io.spacedog.services;
 
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
+import io.spacedog.database.elastic.ElasticClient;
 import io.spacedog.server.Server;
-import io.spacedog.services.elastic.ElasticClient;
 
 public class SpaceService implements SpaceFields, SpaceParams {
 

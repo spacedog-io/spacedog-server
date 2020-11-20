@@ -18,9 +18,9 @@ import com.google.common.collect.Lists;
 import io.spacedog.client.log.LogItem;
 import io.spacedog.client.log.LogSearchResults;
 import io.spacedog.client.schema.Schema;
+import io.spacedog.database.elastic.ElasticIndex;
+import io.spacedog.database.elastic.ElasticUtils;
 import io.spacedog.services.SpaceService;
-import io.spacedog.services.elastic.ElasticIndex;
-import io.spacedog.services.elastic.ElasticUtils;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Json;
 
