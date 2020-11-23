@@ -150,7 +150,7 @@ public class StripeRestyTest extends SpaceTest {
 		Map<String, Object> cardParams = Maps.newHashMap();
 		cardParams.put("number", "4242424242424242");
 		cardParams.put("exp_month", 11);
-		cardParams.put("exp_year", 2019);
+		cardParams.put("exp_year", 2023);
 		cardParams.put("cvc", "314");
 		tokenParams.put("card", cardParams);
 		Token token = Token.create(tokenParams);
