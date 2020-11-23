@@ -1,4 +1,4 @@
-package io.spacedog.database.elastic;
+package io.spacedog.services.db.elastic;
 
 import java.util.Collections;
 

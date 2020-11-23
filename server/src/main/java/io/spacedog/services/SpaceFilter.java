@@ -1,4 +1,4 @@
-package io.spacedog.server;
+package io.spacedog.services;
 
 import net.codestory.http.filters.Filter;
 

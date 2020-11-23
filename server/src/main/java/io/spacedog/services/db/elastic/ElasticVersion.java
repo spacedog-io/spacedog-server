@@ -1,7 +1,7 @@
 /**
  * © David Attias 2020
  */
-package io.spacedog.database.elastic;
+package io.spacedog.services.db.elastic;
 
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Utils;

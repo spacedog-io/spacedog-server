@@ -1,4 +1,4 @@
-package io.spacedog.database.elastic;
+package io.spacedog.services.db.elastic;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -8,7 +8,7 @@ import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.SearchHit;
 
-import io.spacedog.server.Server;
+import io.spacedog.services.Server;
 import net.codestory.http.payload.StreamingOutput;
 
 public class ElasticExportStreamingOutput implements StreamingOutput {

@@ -16,9 +16,9 @@ import com.amazonaws.services.lambda.model.InvokeResult;
 
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.lambda.LambdaSettings;
-import io.spacedog.server.Server;
-import io.spacedog.server.ServerConfig;
-import io.spacedog.server.SpaceFilter;
+import io.spacedog.services.Server;
+import io.spacedog.services.ServerConfig;
+import io.spacedog.services.SpaceFilter;
 import io.spacedog.services.SpaceResty;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;

@@ -19,7 +19,6 @@ import io.spacedog.client.http.ContentTypes;
 import io.spacedog.client.http.SpaceException;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceHeaders;
-import io.spacedog.server.Server;
 import io.spacedog.utils.Json;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;

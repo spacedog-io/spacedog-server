@@ -7,8 +7,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.sms.SmsRequest;
 import io.spacedog.client.sms.SmsTemplate;
-import io.spacedog.server.Server;
 import io.spacedog.services.JsonPayload;
+import io.spacedog.services.Server;
 import io.spacedog.services.Services;
 import io.spacedog.services.SpaceResty;
 import net.codestory.http.Context;

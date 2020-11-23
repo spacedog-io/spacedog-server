@@ -8,7 +8,7 @@ import java.util.Set;
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.RolePermissions;
-import io.spacedog.server.Server;
+import io.spacedog.services.Server;
 import io.spacedog.services.Services;
 import io.spacedog.utils.Exceptions;
 

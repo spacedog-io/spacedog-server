@@ -11,9 +11,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Maps;
 
 import io.spacedog.client.schema.Schema;
-import io.spacedog.database.elastic.ElasticIndex;
 import io.spacedog.services.Services;
 import io.spacedog.services.SpaceService;
+import io.spacedog.services.db.elastic.ElasticIndex;
 import io.spacedog.services.push.PushService;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;

@@ -3,7 +3,7 @@ package io.spacedog.services.elastic;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.spacedog.database.elastic.ElasticIndex;
+import io.spacedog.services.db.elastic.ElasticIndex;
 
 public class IndexTest extends Assert {
 

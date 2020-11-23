@@ -24,8 +24,8 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 import io.spacedog.client.http.WebPath;
-import io.spacedog.server.Server;
-import io.spacedog.server.ServerConfig;
+import io.spacedog.services.Server;
+import io.spacedog.services.ServerConfig;
 import net.codestory.http.constants.HttpStatus;
 
 public class S3FileStore implements FileStore {

@@ -39,8 +39,8 @@ import io.spacedog.client.http.SpaceStatus;
 import io.spacedog.client.job.JobLog;
 import io.spacedog.client.job.LambdaJob;
 import io.spacedog.jobs.Internals;
-import io.spacedog.server.Server;
-import io.spacedog.server.ServerConfig;
+import io.spacedog.services.Server;
+import io.spacedog.services.ServerConfig;
 import io.spacedog.utils.Utils;
 import net.codestory.http.payload.Payload;
 

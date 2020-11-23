@@ -25,8 +25,8 @@ import com.univocity.parsers.csv.CsvWriterSettings;
 
 import io.spacedog.client.data.CsvRequest;
 import io.spacedog.client.data.CsvRequest.Column;
-import io.spacedog.database.elastic.ElasticClient;
-import io.spacedog.server.Server;
+import io.spacedog.services.Server;
+import io.spacedog.services.db.elastic.ElasticClient;
 import io.spacedog.utils.Json;
 import net.codestory.http.payload.StreamingOutput;
 

@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.server;
+package io.spacedog.services;
 
 import io.spacedog.client.http.SpaceHeaders;
 import net.codestory.http.Context;

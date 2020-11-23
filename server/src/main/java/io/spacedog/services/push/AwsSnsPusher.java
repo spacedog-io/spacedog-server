@@ -19,7 +19,7 @@ import com.amazonaws.services.sns.model.PlatformApplication;
 import com.amazonaws.services.sns.model.SetEndpointAttributesRequest;
 
 import io.spacedog.client.push.PushProtocol;
-import io.spacedog.server.ServerConfig;
+import io.spacedog.services.ServerConfig;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Utils;
 

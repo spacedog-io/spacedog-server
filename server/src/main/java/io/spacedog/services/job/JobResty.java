@@ -6,7 +6,7 @@ package io.spacedog.services.job;
 import java.util.List;
 
 import io.spacedog.client.job.LambdaJob;
-import io.spacedog.server.Server;
+import io.spacedog.services.Server;
 import io.spacedog.services.Services;
 import io.spacedog.services.SpaceResty;
 import io.spacedog.utils.Exceptions;

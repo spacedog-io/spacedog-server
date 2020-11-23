@@ -1,8 +1,8 @@
-package io.spacedog.database.elastic;
+package io.spacedog.services.db.elastic;
 
 import java.util.Arrays;
 
-import io.spacedog.server.Server;
+import io.spacedog.services.Server;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 

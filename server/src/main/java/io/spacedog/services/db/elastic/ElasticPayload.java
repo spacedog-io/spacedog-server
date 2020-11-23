@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.database.elastic;
+package io.spacedog.services.db.elastic;
 
 import org.elasticsearch.action.index.IndexResponse;
 

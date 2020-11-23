@@ -1,4 +1,4 @@
-package io.spacedog.server;
+package io.spacedog.services;
 
 import java.util.List;
 import java.util.Map;
@@ -10,7 +10,6 @@ import com.google.common.base.Strings;
 import io.spacedog.client.http.ContentTypes;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.jobs.Internals;
-import io.spacedog.services.JsonPayload;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;

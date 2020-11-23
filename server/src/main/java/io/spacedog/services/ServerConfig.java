@@ -1,4 +1,4 @@
-package io.spacedog.server;
+package io.spacedog.services;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
