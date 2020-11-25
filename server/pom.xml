@@ -58,7 +58,7 @@
 			<artifactId>http</artifactId>
 			<version>2.105</version>
 		</dependency>
-		<!-- overrides jackson version from http dependency -->
+		<!-- overrides jackson version from fluent-http dependency -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-annotations</artifactId>
@@ -69,11 +69,6 @@
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
 			<version>${jackson-version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-core</artifactId>
-			<version>2.9.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.amazonaws</groupId>
