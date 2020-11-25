@@ -181,9 +181,9 @@ public class JsonTest extends Assert {
 	@Test
 	public void shouldPartiallyUpdatePojo() {
 		DataWrap<ObjectNode> object = DataWrap.wrap(ObjectNode.class);
-		String json = Json.object("version", 1).toString();
+		String json = Json.object("version", "1").toString();
 		Json.updatePojo(json, object);
-		assertEquals(1, object.version());
+		assertEquals("1", object.version());
 	}
 
 	@Test
