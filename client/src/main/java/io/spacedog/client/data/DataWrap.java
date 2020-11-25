@@ -227,7 +227,7 @@ public class DataWrap<K> implements DataObject, SpaceFields {
 				&& Objects.equals(source(), wrap.source()) //
 				&& Objects.equals(sourceClass(), wrap.sourceClass()) //
 				&& Objects.equals(type(), wrap.type()) //
-				&& version() == wrap.version();
+				&& Objects.equals(version(), wrap.version());
 	}
 
 	@Override
