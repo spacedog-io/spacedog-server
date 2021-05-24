@@ -111,7 +111,8 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		// fluent will gzip this file stream and use 'chunked'
 		// Transfer-Encoding incompatible with Content-Length header
 
-		if (!context.header(SpaceHeaders.ACCEPT_ENCODING).contains(SpaceHeaders.GZIP))
+		String acceptEncodingHeader = context.header(SpaceHeaders.ACCEPT_ENCODING);
+		if (acceptEncodingHeader != null && !acceptEncodingHeader.contains(SpaceHeaders.GZIP))
 			payload.withHeader(SpaceHeaders.CONTENT_LENGTH, //
 					Long.toString(file.getLength()));
 
